@@ -9,8 +9,7 @@ let propertiesReader = require("properties-reader");
 let propertiesPath = path.resolve(__dirname, "conf/db.properties");
 let properties = propertiesReader(propertiesPath);
 let dbPprefix = properties.get("db.prefix");
-//URL-Encoding of User and PWD
-//for potential special characters
+
 let dbUsername = encodeURIComponent(properties.get("db.user"));
 let dbPwd = encodeURIComponent(properties.get("db.pwd"));
 let dbName = properties.get("db.dbName");
@@ -36,18 +35,17 @@ app.get('/collections/:collectionName', function(req, res, next) {
     });
 });
 
-app.post('/orders', async (req, res) => {
-  const order = req.body;
+app.post('/collections/:collectionName'
+    , function(req, res, next) {
+        // TODO: Validate req.body
+        req.collection.insertOne(req.body, function(err, results) {
+            if (err) {
+                return next(err);
+            }
+            res.send(results);
+        });
+    });
 
-  // Validate the incoming data
-  if (!order.name || !order.phone || !Array.isArray(order.items)) {
-    return res.status(400).json({ error: 'Invalid order data' });
-  }
-
-  // Save the order in the 'orders' collection
-  await db.collection('orders').insertOne(order);
-  res.json({ status: 'Order created' });
-});
 app.put('/collections/:collectionName/:id'
     , function(req, res, next) {
         req.collection.updateOne({_id: new ObjectId(req.params.id)},
@@ -101,9 +99,6 @@ app.get('/search', async (req, res) => {
         res.status(500).json({ error: 'Failed to perform search' });
     }
 });
-
-
-
 
 app.use((req, res) => res.status(404).send('Operation not available'));
 
