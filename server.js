@@ -62,6 +62,18 @@ app.put('/collections/:collectionName/:id'
         );
     });
 
+app.use((req, res, next) => {
+    const currentTime = new Date().toISOString(); // Get the current timestamp
+    console.log(`[${currentTime}] ${req.method} ${req.url}`); // Log the method and URL
+
+    // Log the request body if it exists (for POST/PUT requests)
+    if (req.method === 'POST' || req.method === 'PUT') {
+        console.log('Request Body:', req.body);
+    }
+
+    next(); // Pass control to the next middleware or route
+});
+
 
 
 app.use((req, res) => res.status(404).send('Operation not available'));
