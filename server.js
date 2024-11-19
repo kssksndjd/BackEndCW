@@ -74,6 +74,35 @@ app.use((req, res, next) => {
     next(); // Pass control to the next middleware or route
 });
 
+// GET /search route to handle search queries
+app.get('/search', async (req, res) => {
+    try {
+        const { query } = req.query; // Extract the search query from the request parameters
+
+        // Check if a query is provided
+        if (!query) {
+            return res.status(400).json({ error: 'No search query provided' });
+        }
+
+        // Perform a case-insensitive search on multiple fields
+        const results = await db.collection('lessons').find({
+            $or: [
+                { subject: { $regex: query, $options: 'i' } },
+                { location: { $regex: query, $options: 'i' } },
+                { price: { $regex: query, $options: 'i' } },
+                { spaces: { $regex: query, $options: 'i' } }
+            ]
+        }).toArray();
+
+        // Return the search results
+        res.json(results);
+    } catch (error) {
+        console.error('Error handling search request:', error);
+        res.status(500).json({ error: 'Failed to perform search' });
+    }
+});
+
+
 
 
 app.use((req, res) => res.status(404).send('Operation not available'));
