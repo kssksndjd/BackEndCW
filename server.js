@@ -50,14 +50,13 @@ app.post('/orders', async (req, res) => {
 });
 app.put('/collections/:collectionName/:id'
     , function(req, res, next) {
-        // TODO: Validate req.body
         req.collection.updateOne({_id: new ObjectId(req.params.id)},
             {$set: req.body},
             {safe: true, multi: false}, function(err, result) {
                 if (err) {
                     return next(err);
                 } else {
-                    res.send((result.matchedCount === 1) ? {msg: "success"} : {msg: "error"});
+                    res.send((result.matchedCount === 1) ? {Message: "success"} : {Message: "error"});
                 }
             }
         );
@@ -65,7 +64,6 @@ app.put('/collections/:collectionName/:id'
 
 
 
-// Handle all other routes with a 404 error
 app.use((req, res) => res.status(404).send('Operation not available'));
 
 // Start the server
