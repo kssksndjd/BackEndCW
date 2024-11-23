@@ -9,7 +9,8 @@ let propertiesReader = require("properties-reader");
 let propertiesPath = path.resolve(__dirname, "conf/db.properties");
 let properties = propertiesReader(propertiesPath);
 let dbPprefix = properties.get("db.prefix");
-
+//URL-Encoding of User and PWD
+//for potential special characters
 let dbUsername = encodeURIComponent(properties.get("db.user"));
 let dbPwd = encodeURIComponent(properties.get("db.pwd"));
 let dbName = properties.get("db.dbName");
@@ -24,52 +25,6 @@ let db = client.db(dbName);
 app.param('collectionName', function(req, res, next, collectionName) {
     req.collection = db.collection(collectionName);
     return next();
-});
-
-app.get('/collections/:collectionName', function(req, res, next) {
-    req.collection.find({}).toArray(function(err, results) {
-        if (err) {
-            return next(err);
-        }
-        res.send(results);
-    });
-});
-
-app.post('/collections/:collectionName'
-    , function(req, res, next) {
-        // TODO: Validate req.body
-        req.collection.insertOne(req.body, function(err, results) {
-            if (err) {
-                return next(err);
-            }
-            res.send(results);
-        });
-    });
-
-app.put('/collections/:collectionName/:id'
-    , function(req, res, next) {
-        req.collection.updateOne({_id: new ObjectId(req.params.id)},
-            {$set: req.body},
-            {safe: true, multi: false}, function(err, result) {
-                if (err) {
-                    return next(err);
-                } else {
-                    res.send((result.matchedCount === 1) ? {Message: "success"} : {Message: "error"});
-                }
-            }
-        );
-    });
-
-app.use((req, res, next) => {
-    const currentTime = new Date().toISOString(); // Get the current timestamp
-    console.log(`[${currentTime}] ${req.method} ${req.url}`); // Log the method and URL
-
-    // Log the request body if it exists (for POST/PUT requests)
-    if (req.method === 'POST' || req.method === 'PUT') {
-        console.log('Request Body:', req.body);
-    }
-
-    next(); // Pass control to the next middleware or route
 });
 
 // GET /search route to handle search queries
@@ -100,10 +55,62 @@ app.get('/search', async (req, res) => {
     }
 });
 
+
+// Logger middleware
+app.use((req, res, next) => {
+    const currentTime = new Date().toISOString(); // Get the current timestamp
+    console.log(`[${currentTime}] ${req.method} ${req.url}`); // Log the method and URL
+
+    // Log the request body if it exists (for POST/PUT requests)
+    if (req.method === 'POST' || req.method === 'PUT') {
+        console.log('Request Body:', req.body);
+    }
+
+    next(); // Pass control to the next middleware or route
+});
+
+
+app.get('/collections/:collectionName', function(req, res, next) {
+    req.collection.find({}).toArray(function(err, results) {
+        if (err) {
+            return next(err);
+        }
+        res.send(results);
+    });
+});
+
+app.post('/orders', async (req, res) => {
+    const order = req.body;
+
+    // Validate the incoming data
+    if (!order.name || !order.phone || !Array.isArray(order.items)) {
+        return res.status(400).json({ error: 'Invalid order data' });
+    }
+
+    // Save the order in the 'orders' collection
+    await db.collection('orders').insertOne(order);
+    res.json({ status: 'Order created' });
+});
+
+app.put('/collections/:collectionName/:id'
+    , function(req, res, next) {
+        // TODO: Validate req.body
+        req.collection.updateOne({_id: new ObjectId(req.params.id)},
+            {$set: req.body},
+            {safe: true, multi: false}, function(err, result) {
+                if (err) {
+                    return next(err);
+                } else {
+                    res.send((result.matchedCount === 1) ? {msg: "success"} : {msg: "error"});
+                }
+            }
+        );
+    });
+
+
+
+// Handle all other routes with a 404 error
 app.use((req, res) => res.status(404).send('Operation not available'));
 
 // Start the server
-const port = process.env.PORT || 3000;
-app.listen(port, function() {
-    console.log("App started on port: " + port);
-});
+app.listen(3000, () => console.log('Server running on port 3000'));0, () => console.log('Server running on port 3000');
