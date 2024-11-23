@@ -79,18 +79,17 @@ app.get('/collections/:collectionName', function(req, res, next) {
     });
 });
 
-app.post('/orders', async (req, res) => {
-    const order = req.body;
+app.post('/collections/:collectionName'
+    , function(req, res, next) {
+        // TODO: Validate req.body
+        req.collection.insertOne(req.body, function(err, results) {
+            if (err) {
+                return next(err);
+            }
+            res.send(results);
+        });
+    });
 
-    // Validate the incoming data
-    if (!order.name || !order.phone || !Array.isArray(order.items)) {
-        return res.status(400).json({ error: 'Invalid order data' });
-    }
-
-    // Save the order in the 'orders' collection
-    await db.collection('orders').insertOne(order);
-    res.json({ status: 'Order created' });
-});
 
 app.put('/collections/:collectionName/:id'
     , function(req, res, next) {
@@ -113,4 +112,4 @@ app.put('/collections/:collectionName/:id'
 app.use((req, res) => res.status(404).send('Operation not available'));
 
 // Start the server
-app.listen(3000, () => console.log('Server running on port 3000'));0, () => console.log('Server running on port 3000');
+app.listen(3000, () => console.log('Server running on port 3000'));
