@@ -4,7 +4,7 @@ app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 const path = require('path');
-
+//anythingg
 let propertiesReader = require("properties-reader");
 let propertiesPath = path.resolve(__dirname, "conf/db.properties");
 let properties = propertiesReader(propertiesPath);
